@@ -95,58 +95,6 @@ unset BORG_PASSPHRASE
 
 ---
 
-## Your Script vs. Our Scripts — Comparison
-
-### Your "Enterprise" Script
-
-**Pros:**
-- ✅ Simpler, easier to read
-- ✅ Includes package list backup
-- ✅ Uses `--one-file-system` (correct for `/` backup)
-- ✅ Good exclude list
-
-**Cons:**
-- ❌ Hardcoded paths (`BACKUP_PATHS="/ /var/backups"`)
-- ❌ No database dump support
-- ❌ No path existence checking (fails if `/var/www` missing)
-- ❌ Uses `StrictHostKeyChecking=yes` (fails on first run)
-- ❌ No per-client customization
-- ❌ Prune uses `--glob-archives` (fails on borg 2.x)
-- ❌ `borg check --last 1` is slower than needed
-
-### Our Scripts
-
-**Pros:**
-- ✅ Configurable via `/etc/borg-client.conf`
-- ✅ Auto-detects borg version (handles 1.x vs 2.x)
-- ✅ Database dumps (MySQL/PostgreSQL)
-- ✅ Skips missing paths gracefully
-- ✅ `StrictHostKeyChecking=accept-new` (works on first run)
-- ✅ Embedded in client-setup (single file distribution)
-- ✅ Restore script included
-- ✅ Better error handling
-
-**Cons:**
-- ❌ More complex
-- ❌ Longer code
-
-### **Recommendation**
-
-**Use our scripts** for most deployments because:
-1. They're production-tested through this entire conversation
-2. Auto-handle edge cases (borg version changes, missing paths, SSH keys)
-3. Include restore capability out of the box
-
-**Use your script** if:
-- You need absolute simplicity
-- You're backing up identical servers
-- You don't need databases
-
-**Best approach: Hybrid**
-Keep our `borg-client-setup.sh` (handles registration, SSH, systemd), but replace `borg-backup.sh` with your simpler version if you prefer it.
-
----
-
 ## System Architecture Overview
 
 ```
