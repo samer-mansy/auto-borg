@@ -1,7 +1,3 @@
-# BorgBackup-Automation
-The system is designed to be **set-and-forget**. Once configured, backups run automatically daily at 2AM, prune old archives, verify integrity, and log everything.
-
-
 # BorgBackup Centralized System — Complete Guide
 
 ## Quick Start
@@ -97,7 +93,27 @@ unset BORG_PASSPHRASE
 - Contain runtime kernel data (useless to restore)
 - Can't be backed up anyway
 
-======================================================
+---
+
+## Your Script vs. Our Scripts — Comparison
+
+### Your "Enterprise" Script
+
+**Pros:**
+- ✅ Simpler, easier to read
+- ✅ Includes package list backup
+- ✅ Uses `--one-file-system` (correct for `/` backup)
+- ✅ Good exclude list
+
+**Cons:**
+- ❌ Hardcoded paths (`BACKUP_PATHS="/ /var/backups"`)
+- ❌ No database dump support
+- ❌ No path existence checking (fails if `/var/www` missing)
+- ❌ Uses `StrictHostKeyChecking=yes` (fails on first run)
+- ❌ No per-client customization
+- ❌ Prune uses `--glob-archives` (fails on borg 2.x)
+- ❌ `borg check --last 1` is slower than needed
+
 ### Our Scripts
 
 **Pros:**
@@ -113,10 +129,27 @@ unset BORG_PASSPHRASE
 **Cons:**
 - ❌ More complex
 - ❌ Longer code
-======================================================
+
+### **Recommendation**
+
+**Use our scripts** for most deployments because:
+1. They're production-tested through this entire conversation
+2. Auto-handle edge cases (borg version changes, missing paths, SSH keys)
+3. Include restore capability out of the box
+
+**Use your script** if:
+- You need absolute simplicity
+- You're backing up identical servers
+- You don't need databases
+
+**Best approach: Hybrid**
+Keep our `borg-client-setup.sh` (handles registration, SSH, systemd), but replace `borg-backup.sh` with your simpler version if you prefer it.
+
+---
 
 ## System Architecture Overview
 
+```
 ┌─────────────────────────────────────────────────────────────┐
 │ Dell T320 Backup Server (borg-server)                       │
 ├─────────────────────────────────────────────────────────────┤
@@ -144,10 +177,9 @@ unset BORG_PASSPHRASE
     │ 2AM      │        │ 2AM      │        │ 2AM      │
     │ daily    │        │ daily    │        │ daily    │
     └──────────┘        └──────────┘        └──────────┘
+```
 
-
-    
-
+---
 
 ## Key Files & Locations
 
@@ -174,9 +206,7 @@ unset BORG_PASSPHRASE
 | `/etc/systemd/system/borg-backup.timer` | Systemd timer (default: daily 2AM) |
 | `/var/log/borg/backup-YYYYMMDD.log` | Daily backup logs |
 
-
-
-======================================================
+---
 
 ## Common Scenarios & Edits
 
@@ -253,7 +283,7 @@ app_server_PASSPHRASE="passphrase3"
 
 Then `bash borg-list-all.sh` works without entering passphrases.
 
-======================================================
+---
 
 ## Security Features Built-In
 
@@ -266,7 +296,7 @@ Then `bash borg-list-all.sh` works without entering passphrases.
 7. **Firewall**: UFW restricts SSH access
 8. **Audit Logging**: auditd tracks all SSH/sudo/file changes
 
-======================================================
+---
 
 ## Disaster Recovery — Full Restore
 
@@ -309,7 +339,7 @@ exit
 reboot
 ```
 
-======================================================
+---
 
 ## Performance Tuning
 
@@ -327,9 +357,9 @@ reboot
 Add to BORG_RSH:
 ```bash
 -o "Compression=yes" -o "CompressionLevel=9"
+```
 
-======================================================
-
+---
 
 ## Troubleshooting
 
@@ -365,7 +395,7 @@ strace -p <borg-pid>
 
 # Common cause: backing up /proc or /sys
 # Fix: Add --one-file-system flag
-
+```
 
 ### "Borg exited with rc=2"
 Check `/var/log/borg/backup-YYYYMMDD.log` for details. Common causes:
@@ -373,8 +403,7 @@ Check `/var/log/borg/backup-YYYYMMDD.log` for details. Common causes:
 - Compact on append-only repo
 - Passphrase mismatch
 
-
-======================================================
+---
 
 ## Summary
 
@@ -385,3 +414,5 @@ Check `/var/log/borg/backup-YYYYMMDD.log` for details. Common causes:
    - `/root/borg-repokey-*.key`  
    - `/root/.borg-passphrase`  
 ✅ **Server-side listing needs passphrases** — create `/etc/borg-passphrases.conf`  
+
+The system is designed to be **set-and-forget**. Once configured, backups run automatically daily at 2AM, prune old archives, verify integrity, and log everything.
